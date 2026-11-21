@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<Events>
+	<Event id="buttonPressed">
+		<Name>HomeKit Button Pressed</Name>
+		<ConfigUI>
+			<Field id="deviceId" type="menu">
+				<Label>Button:</Label>
+				<List class="indigo.devices" filter="self.hkButton"/>
+			</Field>
+			<Field id="pressType" type="menu" defaultValue="any">
+				<Label>Press:</Label>
+				<List>
+					<Option value="any">Any press</Option>
+					<Option value="single">Single press</Option>
+					<Option value="double">Double press</Option>
+					<Option value="long">Long press</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Event>
+	<Event id="connectionChanged">
+		<Name>HomeKit Accessory Goes Offline or Online</Name>
+		<ConfigUI>
+			<Field id="deviceId" type="menu">
+				<Label>Accessory:</Label>
+				<List class="indigo.devices" filter="self.hkPairing"/>
+			</Field>
+			<Field id="change" type="menu" defaultValue="offline">
+				<Label>When it:</Label>
+				<List>
+					<Option value="offline">Goes offline</Option>
+					<Option value="online">Comes back online</Option>
+					<Option value="any">Either</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Event>
+</Events>

@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<PluginConfig>
+	<Field id="intro" type="label">
+		<Label>Pair HomeKit accessories from Plugins > HomeKit Device Importer > Open Pairing Page. Each accessory's services become Indigo devices.</Label>
+	</Field>
+	<Field id="iwsUrl" type="textfield" defaultValue="http://localhost:8176">
+		<Label>Indigo web server URL:</Label>
+	</Field>
+	<Field id="iwsHelp" type="label" fontSize="small" alignWithControl="true">
+		<Label>Used to open the pairing page. The page itself is at /message/com.durosity.indigoplugin.homekitimporter/ui/ on this server.</Label>
+	</Field>
+
+	<Field id="sep1" type="separator"/>
+	<Field id="autoCreateDevices" type="checkbox" defaultValue="true">
+		<Label>Create devices automatically:</Label>
+		<Description>When an accessory is paired or gains a new service</Description>
+	</Field>
+	<Field id="createFolders" type="checkbox" defaultValue="true">
+		<Label>Use a folder per accessory:</Label>
+		<Description>Put each pairing's devices in a device folder named after it</Description>
+	</Field>
+	<Field id="tempUnit" type="menu" defaultValue="C">
+		<Label>Temperatures in:</Label>
+		<List>
+			<Option value="C">Celsius</Option>
+			<Option value="F">Fahrenheit</Option>
+		</List>
+	</Field>
+
+	<Field id="sep2" type="separator"/>
+	<Field id="pollInterval" type="textfield" defaultValue="60">
+		<Label>Check-in interval (seconds):</Label>
+	</Field>
+	<Field id="pollHelp" type="label" fontSize="small" alignWithControl="true">
+		<Label>Most changes arrive instantly as HomeKit notifications. This is how often Indigo reads the few values that don't send notifications and checks the accessory is still there.</Label>
+	</Field>
+	<Field id="enableThread" type="checkbox" defaultValue="true">
+		<Label>Thread accessories:</Label>
+		<Description>Find and control Thread accessories (needs a Thread border router, such as a HomePod mini or Apple TV 4K)</Description>
+	</Field>
+	<Field id="enableBluetooth" type="checkbox" defaultValue="false">
+		<Label>Bluetooth accessories:</Label>
+		<Description>Find and control Bluetooth LE accessories (macOS will ask to allow Bluetooth for Indigo)</Description>
+	</Field>
+	<Field id="interfaces" type="textfield" defaultValue="">
+		<Label>Only use these network addresses:</Label>
+	</Field>
+	<Field id="interfacesHelp" type="label" fontSize="small" alignWithControl="true">
+		<Label>Leave blank to search on every network interface. To limit discovery, enter this Mac's own IP addresses separated by commas.</Label>
+	</Field>
+
+	<Field id="sep3" type="separator"/>
+	<Field id="logChanges" type="checkbox" defaultValue="true">
+		<Label>Log commands and changes:</Label>
+		<Description>"sent" and "received" lines in the Event Log, like Indigo's own devices</Description>
+	</Field>
+	<Field id="logSensors" type="checkbox" defaultValue="false">
+		<Label>Log sensor readings:</Label>
+		<Description>Also log every temperature, humidity and light reading</Description>
+	</Field>
+	<Field id="debugLogging" type="checkbox" defaultValue="false">
+		<Label>Debug logging:</Label>
+		<Description>Detailed logging, including the HomeKit library's own log in the plugin log file</Description>
+	</Field>
+</PluginConfig>

@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<Actions>
+	<Action id="setCharacteristic" deviceFilter="self">
+		<Name>Set HomeKit Characteristic</Name>
+		<CallbackMethod>actionSetCharacteristic</CallbackMethod>
+		<ConfigUI>
+			<Field id="characteristic" type="menu">
+				<Label>Characteristic:</Label>
+				<List class="self" method="charListGenerator" dynamicReload="true"/>
+			</Field>
+			<Field id="value" type="textfield">
+				<Label>Value:</Label>
+			</Field>
+			<Field id="valueHelp" type="label" fontSize="small" alignWithControl="true">
+				<Label>Use true or false for on/off values. Numbers are kept within the characteristic's range. Variable substitution such as %%v:12345%% works.</Label>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="identify" deviceFilter="self">
+		<Name>Identify Accessory</Name>
+		<CallbackMethod>actionIdentify</CallbackMethod>
+	</Action>
+	<Action id="refresh" deviceFilter="self">
+		<Name>Refresh From Accessory</Name>
+		<CallbackMethod>actionRefresh</CallbackMethod>
+	</Action>
+	<Action id="sep1"/>
+	<Action id="securityMode" deviceFilter="self.hkSecurity">
+		<Name>Set Security System Mode</Name>
+		<CallbackMethod>actionSecurityMode</CallbackMethod>
+		<ConfigUI>
+			<Field id="mode" type="menu" defaultValue="away">
+				<Label>Mode:</Label>
+				<List>
+					<Option value="home">Home (stay)</Option>
+					<Option value="away">Away</Option>
+					<Option value="night">Night</Option>
+					<Option value="disarmed">Disarmed</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="fanDirection" deviceFilter="self.hkFan">
+		<Name>Set Fan Direction</Name>
+		<CallbackMethod>actionFanDirection</CallbackMethod>
+		<ConfigUI>
+			<Field id="direction" type="menu" defaultValue="toggle">
+				<Label>Direction:</Label>
+				<List>
+					<Option value="clockwise">Clockwise</Option>
+					<Option value="counterclockwise">Anticlockwise</Option>
+					<Option value="toggle">Reverse</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="fanSwing" deviceFilter="self.hkFan">
+		<Name>Set Fan Swing (Oscillation)</Name>
+		<CallbackMethod>actionFanSwing</CallbackMethod>
+		<ConfigUI>
+			<Field id="swing" type="menu" defaultValue="toggle">
+				<Label>Swing:</Label>
+				<List>
+					<Option value="on">On</Option>
+					<Option value="off">Off</Option>
+					<Option value="toggle">Toggle</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="fanMode" deviceFilter="self.hkFan">
+		<Name>Set Fan or Purifier Mode</Name>
+		<CallbackMethod>actionFanMode</CallbackMethod>
+		<ConfigUI>
+			<Field id="mode" type="menu" defaultValue="auto">
+				<Label>Mode:</Label>
+				<List>
+					<Option value="auto">Auto</Option>
+					<Option value="manual">Manual</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="coverTilt" deviceFilter="self.hkCovering">
+		<Name>Set Blind Tilt</Name>
+		<CallbackMethod>actionCoverTilt</CallbackMethod>
+		<ConfigUI>
+			<Field id="angle" type="textfield" defaultValue="0">
+				<Label>Tilt angle (-90 to 90):</Label>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="coverStop" deviceFilter="self.hkCovering">
+		<Name>Stop Blind</Name>
+		<CallbackMethod>actionCoverStop</CallbackMethod>
+	</Action>
+	<Action id="humidifierMode" deviceFilter="self.hkHumidifier">
+		<Name>Set Humidifier Mode</Name>
+		<CallbackMethod>actionHumidifierMode</CallbackMethod>
+		<ConfigUI>
+			<Field id="mode" type="menu" defaultValue="auto">
+				<Label>Mode:</Label>
+				<List>
+					<Option value="auto">Auto</Option>
+					<Option value="humidify">Humidify</Option>
+					<Option value="dehumidify">Dehumidify</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="humidityTarget" deviceFilter="self.hkHumidifier">
+		<Name>Set Humidity Target</Name>
+		<CallbackMethod>actionHumidityTarget</CallbackMethod>
+		<ConfigUI>
+			<Field id="which" type="menu" defaultValue="dehumidify">
+				<Label>Target:</Label>
+				<List>
+					<Option value="dehumidify">Dehumidify above</Option>
+					<Option value="humidify">Humidify below</Option>
+				</List>
+			</Field>
+			<Field id="level" type="textfield" defaultValue="50">
+				<Label>Humidity (%):</Label>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="valveDuration" deviceFilter="self.hkValve">
+		<Name>Set Valve Run Time</Name>
+		<CallbackMethod>actionValveDuration</CallbackMethod>
+		<ConfigUI>
+			<Field id="seconds" type="textfield" defaultValue="300">
+				<Label>Run time (seconds):</Label>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="tvInput" deviceFilter="self.hkTelevision">
+		<Name>Set TV Input</Name>
+		<CallbackMethod>actionTvInput</CallbackMethod>
+		<ConfigUI>
+			<Field id="input" type="menu">
+				<Label>Input:</Label>
+				<List class="self" method="tvInputGenerator" dynamicReload="true"/>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="tvKey" deviceFilter="self.hkTelevision">
+		<Name>Send TV Remote Key</Name>
+		<CallbackMethod>actionTvKey</CallbackMethod>
+		<ConfigUI>
+			<Field id="key" type="menu" defaultValue="select">
+				<Label>Key:</Label>
+				<List>
+					<Option value="arrowUp">Up</Option>
+					<Option value="arrowDown">Down</Option>
+					<Option value="arrowLeft">Left</Option>
+					<Option value="arrowRight">Right</Option>
+					<Option value="select">Select</Option>
+					<Option value="back">Back</Option>
+					<Option value="exit">Exit</Option>
+					<Option value="playPause">Play/Pause</Option>
+					<Option value="information">Information</Option>
+					<Option value="rewind">Rewind</Option>
+					<Option value="fastForward">Fast Forward</Option>
+					<Option value="nextTrack">Next Track</Option>
+					<Option value="previousTrack">Previous Track</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+	<Action id="tvVolume" deviceFilter="self.hkTelevision">
+		<Name>Set TV Volume</Name>
+		<CallbackMethod>actionTvVolume</CallbackMethod>
+		<ConfigUI>
+			<Field id="volume" type="menu" defaultValue="up">
+				<Label>Volume:</Label>
+				<List>
+					<Option value="up">Up</Option>
+					<Option value="down">Down</Option>
+					<Option value="mute">Mute</Option>
+					<Option value="unmute">Unmute</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+
+	<!-- Indigo Web Server endpoints for the pairing page -->
+	<Action id="ui" uiPath="hidden">
+		<Name>Pairing page</Name>
+		<CallbackMethod>web_page</CallbackMethod>
+	</Action>
+	<Action id="api" uiPath="hidden">
+		<Name>Pairing page API</Name>
+		<CallbackMethod>web_api</CallbackMethod>
+	</Action>
+</Actions>

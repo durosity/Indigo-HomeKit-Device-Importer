@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HomeKit Device Importer</title>
+<style>
+:root {
+  --bg: #EDF0F3;
+  --surface: #FFFFFF;
+  --ink: #18212B;
+  --muted: #5A6674;
+  --line: #D2D9E0;
+  --accent: #E39A2D;
+  --accent-ink: #5E3A00;
+  --ok: #2E8656;
+  --bad: #C0392F;
+  --warn: #B26B00;
+  --sticker: #111;
+  --sticker-bg: #FFFFFF;
+  --focus: #2D6CDF;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161B; --surface: #1A2027; --ink: #E7ECF1; --muted: #98A4B1; --line: #2C353F;
+    --accent: #F0AE4E; --accent-ink: #2A1A00; --ok: #5DBE8B; --bad: #E66A5E; --warn: #E3A23C;
+    --sticker: #F3F3F3; --sticker-bg: #0E1115; --focus: #78A6FF; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0);
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 28px 24px 64px; }
+.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+h1 { font-size: 26px; line-height: 1.15; margin: 0 0 4px; font-weight: 650; letter-spacing: -0.01em; }
+h2 { font-size: 17px; margin: 0 0 6px; font-weight: 650; }
+h3 { font-size: 16px; margin: 0; font-weight: 650; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.grid { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 28px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.panel + .panel { margin-top: 16px; }
+.hint { color: var(--muted); font-size: 13px; margin-bottom: 12px; max-width: 60ch; }
+
+button {
+  font: inherit; font-size: 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); padding: 6px 12px; cursor: pointer; white-space: nowrap;
+}
+button:hover { border-color: var(--muted); }
+button:disabled { opacity: .5; cursor: default; }
+button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+button.danger { color: var(--bad); }
+button.link { border: 0; background: none; padding: 0; color: var(--focus); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+ul.list { list-style: none; margin: 0; padding: 0; }
+ul.list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+ul.list li:first-child { border-top: 0; }
+.grow { flex: 1; min-width: 0; }
+.name { font-weight: 600; overflow-wrap: break-word; }
+.empty { color: var(--muted); font-size: 14px; padding: 6px 0 2px; }
+details { margin-top: 14px; }
+details summary { cursor: pointer; color: var(--muted); font-size: 14px; }
+details p { font-size: 13px; color: var(--muted); margin: 8px 0; max-width: 60ch; }
+
+.pairing { padding: 0; overflow: hidden; }
+.pairing > header { padding: 16px 18px 12px; display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; align-items: start; }
+.pairing .meta { color: var(--muted); font-size: 13px; }
+.pairing .actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; grid-row: span 2; }
+.status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; margin-left: 10px; }
+.status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.status.on { color: var(--ok); } .status.off { color: var(--bad); } .status.wait { color: var(--warn); }
+.title-row { display: flex; align-items: baseline; flex-wrap: wrap; }
+.scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: 12px; padding: 8px 18px; border-top: 1px solid var(--line); }
+td { padding: 9px 18px; border-top: 1px solid var(--line); vertical-align: middle; }
+td.state { color: var(--muted); font-variant-numeric: tabular-nums; }
+td .err { color: var(--bad); }
+.foot { padding: 10px 18px 14px; border-top: 1px solid var(--line); display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+
+/* The setup-code label: drawn like the sticker on the accessory */
+dialog { border: 0; border-radius: 14px; padding: 0; background: var(--surface); color: var(--ink); width: min(460px, calc(100vw - 32px)); box-shadow: 0 18px 50px rgba(0,0,0,.28); }
+dialog::backdrop { background: rgba(10, 14, 20, .45); }
+.dlg { padding: 22px 22px 18px; }
+.dlg h2 { font-size: 19px; margin-bottom: 2px; }
+.sticker {
+  margin: 20px auto 14px; display: flex; align-items: center; gap: 14px; width: fit-content;
+  border: 3px solid var(--sticker); border-radius: 14px; padding: 12px 16px 12px 12px; background: var(--sticker-bg);
+}
+.sticker svg { width: 38px; height: 38px; flex: none; color: var(--sticker); }
+.code { display: flex; align-items: center; gap: 4px; }
+.code .dash { width: 10px; height: 3px; background: var(--sticker); border-radius: 2px; margin: 0 3px; }
+.code input {
+  width: 30px; height: 44px; border: 0; border-bottom: 2px solid var(--line); background: transparent; color: var(--sticker);
+  font: 600 30px/1 ui-monospace, "SF Mono", Menlo, monospace; text-align: center; padding: 0; border-radius: 0;
+  font-variant-numeric: tabular-nums; caret-color: var(--accent);
+}
+.code input:focus { outline: none; border-bottom-color: var(--accent); }
+.dlg .msg { min-height: 1.5em; font-size: 14px; margin-top: 8px; }
+.dlg .msg.err { color: var(--bad); }
+.dlg .msg.ok { color: var(--ok); }
+.dlg .buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.dlg label { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; margin-top: 14px; }
+.spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: -1px; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+@media (max-width: 600px) {
+  .wrap { padding: 20px 14px 48px; }
+  .pairing > header { grid-template-columns: 1fr; }
+  .pairing .actions { grid-row: auto; justify-content: flex-start; }
+  th:nth-child(2), td:nth-child(2) { display: none; }
+  th, td { padding-left: 12px; padding-right: 12px; }
+  .foot { padding-left: 12px; padding-right: 12px; }
+}
+.banner { background: var(--surface); border: 1px solid var(--bad); color: var(--bad); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>HomeKit accessories</h1>
+      <p class="muted" id="engine-line">Connecting to the plugin…</p>
+    </div>
+    <button id="refresh">Check again</button>
+  </div>
+  <div id="banner"></div>
+  <div class="grid">
+    <section>
+      <div class="panel">
+        <h2>Ready to pair</h2>
+        <p class="hint">Accessories on your network that aren’t paired with anything. To move something from Apple Home, remove it in the Home app first.</p>
+        <ul class="list" id="ready"></ul>
+        <details id="elsewhere">
+          <summary>Paired with something else (<span id="elsewhere-count">0</span>)</summary>
+          <p>These already belong to Apple Home or another controller. HomeKit lets an accessory have only one owner, so remove or reset it before pairing it here. Indigo’s own HomeKitLink bridge will appear in this list too; don’t pair Indigo with itself.</p>
+          <ul class="list" id="elsewhere-list"></ul>
+        </details>
+      </div>
+    </section>
+    <section>
+      <h2 style="margin-bottom:12px">Paired with Indigo</h2>
+      <div id="pairings"></div>
+    </section>
+  </div>
+</div>
+
+<dialog id="pair-dialog" aria-labelledby="pair-title">
+  <form class="dlg" method="dialog" id="pair-form">
+    <h2 id="pair-title">Pair accessory</h2>
+    <p class="muted small" id="pair-sub"></p>
+    <div class="sticker" aria-label="HomeKit setup code">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 3.5 17.2a1.6 1.6 0 0 0 2 2.5L8 17.7V34a2 2 0 0 0 2 2h20a2 2 0 0 0 2-2V17.7l2.5 2a1.6 1.6 0 1 0 2-2.5Z" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round"/><rect x="16" y="22" width="8" height="8" rx="1.6" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>
+      <div class="code" id="code"></div>
+    </div>
+    <p class="muted small" style="text-align:center">Type or paste the 8-digit code from the accessory, its box or its manual.</p>
+    <p class="msg" id="pair-msg" aria-live="polite"></p>
+    <div class="buttons">
+      <button type="button" id="pair-cancel">Cancel</button>
+      <button type="submit" class="primary" id="pair-go">Pair</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="unpair-dialog" aria-labelledby="unpair-title">
+  <form class="dlg" method="dialog" id="unpair-form">
+    <h2 id="unpair-title">Unpair</h2>
+    <p class="small" id="unpair-sub"></p>
+    <label><input type="checkbox" id="unpair-delete"> <span>Also delete its Indigo devices. Leave this off to keep triggers and control pages that use them.</span></label>
+    <p class="msg" id="unpair-msg" aria-live="polite"></p>
+    <div class="buttons">
+      <button type="button" id="unpair-cancel">Cancel</button>
+      <button type="button" class="danger" id="unpair-force" hidden>Remove anyway</button>
+      <button type="submit" class="primary" id="unpair-go">Unpair</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+const API = location.pathname.replace(/ui\/?$/, "api/");
+const $ = (id) => document.getElementById(id);
+let state = null;
+let pairing = null;    // {id, name}
+let unpairing = null;  // alias
+let busy = new Set();
+
+function el(tag, props = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, "");
+    else if (v !== false && v != null) n.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) if (kid != null) n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return n;
+}
+
+async function api(op, body, params = {}) {
+  const opts = body ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)} : {};
+  const q = new URLSearchParams({op, ...params});
+  const res = await fetch(`${API}?${q}`, opts);
+  let data = {};
+  try { data = await res.json(); } catch (e) { throw new Error(`The plugin answered with HTTP ${res.status}.`); }
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+async function waitJob(job, onTick) {
+  while (job.state === "running") {
+    await new Promise(r => setTimeout(r, 900));
+    job = await api("job", null, {id: job.id});
+    if (onTick) onTick(job);
+  }
+  if (job.state === "failed") throw new Error(job.error);
+  return job;
+}
+
+/* ---------- rendering ---------- */
+
+function transportText(t) { return t || "network"; }
+
+function render() {
+  if (!state) return;
+  const e = state.engine;
+  const radios = ["Wi-Fi/Ethernet"];
+  if (state.settings.thread) radios.push("Thread");
+  if (state.settings.bluetooth) radios.push("Bluetooth");
+  $("engine-line").textContent = e.running
+    ? `Looking for accessories over ${radios.join(", ").replace(/, ([^,]*)$/, " and $1")}.`
+    : "The HomeKit controller isn’t running.";
+  $("banner").replaceChildren(e.running ? "" : el("div", {class: "banner"}, e.error || "The HomeKit controller isn’t running. Check the Event Log, then use Plugins > HomeKit Device Importer > Reconnect All Accessories."));
+
+  const ready = state.discovered.filter(d => !d.paired && !d.indigo);
+  const elsewhere = state.discovered.filter(d => d.paired && !d.indigo);
+  $("ready").replaceChildren(...(ready.length ? ready.map(readyRow) :
+    [el("li", {}, el("p", {class: "empty"}, "Nothing is waiting to be paired. Put the accessory in pairing mode, or remove it from Apple Home, and it will appear here."))]));
+  $("elsewhere-count").textContent = elsewhere.length;
+  $("elsewhere-list").replaceChildren(...elsewhere.map(d => el("li", {},
+    el("div", {class: "grow"}, el("div", {class: "name"}, d.name), el("div", {class: "muted small"}, [d.categoryName, transportText(d.transport)].filter(Boolean).join(", "))))));
+
+  const pairings = state.pairings;
+  $("pairings").replaceChildren(...(pairings.length ? pairings.map(pairingBlock) :
+    [el("div", {class: "panel"}, el("p", {class: "empty"}, "Nothing yet. Pair an accessory from the list and its devices will appear in Indigo."))]));
+}
+
+function readyRow(d) {
+  const id = `identify-${d.id}`;
+  return el("li", {},
+    el("div", {class: "grow"},
+      el("div", {class: "name"}, d.name),
+      el("div", {class: "muted small"}, [d.categoryName, transportText(d.transport)].filter(Boolean).join(", "))),
+    el("button", {type: "button", disabled: busy.has(id), onclick: () => identify({id: d.id}, id)}, "Identify"),
+    el("button", {type: "button", class: "primary", onclick: () => openPair(d)}, "Pair…"));
+}
+
+function pairingBlock(p) {
+  const status = p.online === true ? el("span", {class: "status on"}, "Online")
+    : p.online === false ? el("span", {class: "status off"}, "Offline") : el("span", {class: "status wait"}, "Connecting");
+  const meta = [p.model, p.category, transportText(p.transport), p.address].filter(Boolean).join(", ");
+  const missing = p.services.filter(s => !s.deviceId).length;
+  const rows = p.services.map(s => el("tr", {},
+    el("td", {}, el("span", {class: "name"}, s.name)),
+    el("td", {class: "muted"}, s.kind),
+    el("td", {}, s.deviceId ? s.deviceName : el("button", {type: "button", disabled: busy.has("add-" + s.key), onclick: () => addDevice(p.alias, s.key)}, "Add to Indigo")),
+    el("td", {class: "state"}, s.error ? el("span", {class: "err"}, s.error) : (s.summary || "")),
+  ));
+  return el("article", {class: "panel pairing"},
+    el("header", {},
+      el("div", {}, el("div", {class: "title-row"}, el("h3", {}, p.name), status)),
+      el("div", {class: "actions"},
+        el("button", {type: "button", disabled: busy.has("id-" + p.alias), onclick: () => identify({alias: p.alias, aid: 1}, "id-" + p.alias)}, "Identify"),
+        el("button", {type: "button", disabled: busy.has("rs-" + p.alias), onclick: () => resync(p.alias)}, "Re-read"),
+        el("button", {type: "button", class: "danger", onclick: () => openUnpair(p)}, "Unpair…")),
+      el("p", {class: "meta"}, meta),
+      p.online === false && p.reason ? el("p", {class: "meta", style: "color:var(--bad)"}, p.reason) : null),
+    p.services.length ? el("div", {class: "scroll"}, el("table", {},
+      el("thead", {}, el("tr", {}, el("th", {}, "Service"), el("th", {}, "Type"), el("th", {}, "Indigo device"), el("th", {}, "State"))),
+      el("tbody", {}, rows))) : el("p", {class: "foot muted"}, p.online === false ? "Waiting for the accessory to come online to read its services." : "Reading services…"),
+    missing > 1 ? el("div", {class: "foot"}, el("button", {type: "button", onclick: () => addAll(p.alias)}, `Add all ${missing} missing devices`)) : null);
+}
+
+async function refresh() {
+  try {
+    state = await api("status");
+    render();
+  } catch (e) {
+    $("engine-line").textContent = `Can’t reach the plugin: ${e.message}`;
+  }
+}
+
+/* ---------- actions ---------- */
+
+async function identify(body, key) {
+  busy.add(key); render();
+  try { const job = await api("identify", body); await waitJob(job); }
+  catch (e) { alert(`Identify failed: ${e.message}`); }
+  finally { busy.delete(key); render(); }
+}
+async function resync(alias) {
+  busy.add("rs-" + alias); render();
+  try { await api("resync", {alias}); setTimeout(refresh, 2500); }
+  catch (e) { alert(e.message); }
+  finally { setTimeout(() => { busy.delete("rs-" + alias); render(); }, 2500); }
+}
+async function addDevice(alias, key) {
+  busy.add("add-" + key); render();
+  try { await api("addDevice", {alias, key}); await refresh(); }
+  catch (e) { alert(e.message); }
+  finally { busy.delete("add-" + key); render(); }
+}
+async function addAll(alias) {
+  try { await api("addAll", {alias}); await refresh(); } catch (e) { alert(e.message); }
+}
+
+/* ---------- pairing dialog ---------- */
+
+const codeBox = $("code");
+const inputs = [];
+[3, 2, 3].forEach((n, g) => {
+  if (g) codeBox.append(el("span", {class: "dash"}));
+  for (let i = 0; i < n; i++) {
+    const inp = el("input", {inputmode: "numeric", autocomplete: "one-time-code", maxlength: "1", "aria-label": `Digit ${inputs.length + 1}`});
+    inputs.push(inp); codeBox.append(inp);
+  }
+});
+inputs.forEach((inp, i) => {
+  inp.addEventListener("input", () => {
+    const digits = inp.value.replace(/\D/g, "");
+    if (digits.length > 1) { fillCode(digits, i); return; }
+    inp.value = digits;
+    if (digits && i < 7) inputs[i + 1].focus();
+    msg("");
+  });
+  inp.addEventListener("keydown", (ev) => {
+    if (ev.key === "Backspace" && !inp.value && i > 0) { inputs[i - 1].focus(); inputs[i - 1].value = ""; ev.preventDefault(); }
+    if (ev.key === "ArrowLeft" && i > 0) inputs[i - 1].focus();
+    if (ev.key === "ArrowRight" && i < 7) inputs[i + 1].focus();
+  });
+  inp.addEventListener("paste", (ev) => {
+    const text = (ev.clipboardData || window.clipboardData).getData("text");
+    ev.preventDefault(); fillCode(text.replace(/\D/g, ""), i);
+  });
+});
+function fillCode(digits, from = 0) {
+  for (let k = 0; k < digits.length && from + k < 8; k++) inputs[from + k].value = digits[k];
+  inputs[Math.min(7, from + digits.length)].focus();
+}
+function code() { return inputs.map(i => i.value).join(""); }
+function msg(text, cls = "") { const m = $("pair-msg"); m.textContent = ""; m.className = "msg " + cls; if (text) m.append(text); }
+
+function openPair(d) {
+  pairing = d;
+  inputs.forEach(i => { i.value = ""; i.disabled = false; });
+  $("pair-title").textContent = `Pair ${d.name}`;
+  $("pair-sub").textContent = [d.categoryName, transportText(d.transport)].filter(Boolean).join(", ");
+  $("pair-go").disabled = false; $("pair-go").textContent = "Pair";
+  msg("");
+  $("pair-dialog").showModal();
+  inputs[0].focus();
+}
+$("pair-cancel").addEventListener("click", () => $("pair-dialog").close());
+$("pair-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const c = code();
+  if (c.length !== 8) { msg("The code needs all 8 digits.", "err"); inputs[c.length].focus(); return; }
+  $("pair-go").disabled = true; inputs.forEach(i => i.disabled = true);
+  const spin = el("span", {class: "spinner", "aria-hidden": "true"});
+  msg(el("span", {}, spin, "Pairing. This can take up to a minute; keep the accessory nearby and powered."));
+  try {
+    const job = await api("pair", {id: pairing.id, code: c, name: pairing.name});
+    await waitJob(job);
+    msg("Paired. Its devices are being added to Indigo.", "ok");
+    $("pair-go").textContent = "Done";
+    setTimeout(() => { $("pair-dialog").close(); refresh(); }, 1400);
+    setTimeout(refresh, 4000);
+  } catch (e) {
+    msg(e.message, "err");
+    $("pair-go").disabled = false; inputs.forEach(i => i.disabled = false);
+  }
+});
+
+/* ---------- unpair dialog ---------- */
+
+function umsg(text, cls = "") { const m = $("unpair-msg"); m.textContent = ""; m.className = "msg " + cls; if (text) m.append(text); }
+function openUnpair(p) {
+  unpairing = p.alias;
+  $("unpair-title").textContent = `Unpair ${p.name}`;
+  $("unpair-sub").textContent = "Indigo tells the accessory to forget it, so you can pair it with Apple Home or Indigo again.";
+  $("unpair-delete").checked = false;
+  $("unpair-force").hidden = true; $("unpair-go").disabled = false;
+  umsg("");
+  $("unpair-dialog").showModal();
+}
+async function doUnpair(force) {
+  $("unpair-go").disabled = true; $("unpair-force").disabled = true;
+  umsg(el("span", {}, el("span", {class: "spinner", "aria-hidden": "true"}), "Unpairing…"));
+  try {
+    const job = await api("unpair", {alias: unpairing, force, deleteDevices: $("unpair-delete").checked});
+    await waitJob(job);
+    $("unpair-dialog").close(); refresh();
+  } catch (e) {
+    umsg(`${e.message} If the accessory is gone for good, Remove anyway forgets it here; reset the accessory before pairing it again.`, "err");
+    $("unpair-force").hidden = false; $("unpair-force").disabled = false; $("unpair-go").disabled = false;
+  }
+}
+$("unpair-cancel").addEventListener("click", () => $("unpair-dialog").close());
+$("unpair-form").addEventListener("submit", (ev) => { ev.preventDefault(); doUnpair(false); });
+$("unpair-force").addEventListener("click", () => doUnpair(true));
+
+$("refresh").addEventListener("click", refresh);
+refresh();
+setInterval(() => { if (!document.hidden) refresh(); }, 4000);
+</script>
+</body>
+</html>

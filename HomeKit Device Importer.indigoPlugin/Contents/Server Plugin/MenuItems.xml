@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<MenuItems>
+	<MenuItem id="openPage">
+		<Name>Open Pairing Page...</Name>
+		<CallbackMethod>menuOpenPage</CallbackMethod>
+	</MenuItem>
+	<MenuItem id="listDiscovered">
+		<Name>List Accessories on the Network</Name>
+		<CallbackMethod>menuListDiscovered</CallbackMethod>
+	</MenuItem>
+	<MenuItem id="separator1"/>
+	<MenuItem id="refreshAll">
+		<Name>Refresh All Devices</Name>
+		<CallbackMethod>menuRefreshAll</CallbackMethod>
+	</MenuItem>
+	<MenuItem id="reconnectAll">
+		<Name>Reconnect All Accessories</Name>
+		<CallbackMethod>menuReconnectAll</CallbackMethod>
+	</MenuItem>
+</MenuItems>
